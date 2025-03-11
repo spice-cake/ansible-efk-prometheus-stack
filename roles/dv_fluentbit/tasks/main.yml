@@ -1,0 +1,42 @@
+---
+
+- name: Add fluent-bit repo
+  ansible.builtin.include_tasks:
+    file: add-debian-rep.yml
+  when: ansible_os_family == 'Debian'
+
+- name: Install fluent-bit.
+  ansible.builtin.package:
+    name: "{{ fluentbit_package }}"
+    state: "{{ fluentbit_package_state }}"
+
+
+- name: Configure fluent-bit.
+  ansible.builtin.template:
+    src: "{{ item | basename }}.j2"
+    dest: "{{ item }}"
+    owner: root
+    group: root
+    mode: "0660"
+  with_items:
+    - /etc/fluent-bit/fluent-bit.conf
+  notify: restart fluent-bit
+
+- name: Add fluent-bit user
+  ansible.builtin.include_role:
+    name: dv_elasticsearch
+    tasks_from: add_elastic_users
+  vars:
+    es_username: "{{ fluentbit_es_user }}"
+    es_user_pass: "{{ fluentbit_es_password }}"
+    es_host: "{{ es_host_master }}"
+    es_user_roles:
+      - superuser
+
+- name: Start fluent-bit.
+  ansible.builtin.systemd:
+    name: fluent-bit
+    daemon_reload: true
+    state: "{{ fluentbit_service_state }}"
+    enabled: "{{ fluentbit_service_enabled }}"
+

@@ -1,0 +1,9 @@
+---
+- hosts: all
+  become: true
+  roles:
+    - dv_prometheus
+    - dv_node_exporter
+    - dv_elasticsearch
+    - dv_kibana
+    - dv_fluentbit

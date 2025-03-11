@@ -1,0 +1,43 @@
+---
+
+- name: Add Elasticsearch repo
+  ansible.builtin.include_tasks:
+    file: add-debian-rep.yml
+  when: ansible_os_family == 'Debian'
+
+- name: Add elastic superuser
+  ansible.builtin.include_tasks:
+    file: add_elastic_users.yml
+  vars:
+    es_username: "{{ es_super_username }}"
+    es_user_pass: "{{ es_super_user_pass }}"
+    es_host: "{{ elasticsearch_network_host }}"
+    es_user_roles:
+      - superuser
+
+- name: Install Elasticsearch.
+  ansible.builtin.package:
+    name: "{{ elasticsearch_package }}"
+    state: "{{ elasticsearch_package_state }}"
+
+
+- name: Configure Elasticsearch.
+  ansible.builtin.template:
+    src: "{{ item | basename }}.j2"
+    dest: "{{ item }}"
+    owner: root
+    group: elasticsearch
+    mode: "0660"
+  with_items:
+    - /etc/elasticsearch/elasticsearch.yml
+    - /etc/elasticsearch/jvm.options.d/heap.options
+  notify: Restart elasticsearch
+
+
+- name: Start Elasticsearch.
+  ansible.builtin.systemd:
+    name: elasticsearch
+    daemon_reload: true
+    state: "{{ elasticsearch_service_state }}"
+    enabled: "{{ elasticsearch_service_enabled }}"
+

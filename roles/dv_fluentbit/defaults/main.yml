@@ -1,0 +1,13 @@
+---
+
+fluentbit_package: fluent-bit
+fluentbit_package_state: present
+
+fluentbit_service_state: started
+fluentbit_service_enabled: true
+
+es_host_master: "localhost"
+es_port: 9200
+
+fluentbit_es_user: fluent-bit
+fluentbit_es_password: ChangeMe!

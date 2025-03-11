@@ -1,0 +1,31 @@
+---
+elasticsearch_version: '8'
+debian_elastic_yandex_mirror: https://mirror.yandex.ru/mirrors/elastic/{{ elasticsearch_version }}/
+elasticsearch_package: elasticsearch
+elasticsearch_package_state: present
+
+elasticsearch_service_state: started
+elasticsearch_service_enabled: true
+
+elasticsearch_network_host: localhost
+elasticsearch_http_port: 9200
+
+elasticsearch_heap_size_min: 1g
+elasticsearch_heap_size_max: 2g
+
+elasticsearch_extra_options: ''
+
+elastic_path_data: /var/lib/elasticsearch
+elastic_path_logs: /var/log/elasticsearch
+elastic_conf_dir: /etc/elasticsearch
+
+
+# Если оставить переменные с паролем пустой, то во время выполнения будет генерироватся пароль
+# Его значения будет выведенно во время выполнения плейбука
+# Подходит для нового развертывания
+# После выполнения можно задать из переменных es_super_user* 
+es_api_basic_auth_username: elastic
+es_api_basic_auth_password: {}
+
+es_super_username: admin
+es_super_user_pass: Zaq12wsd!

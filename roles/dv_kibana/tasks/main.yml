@@ -1,0 +1,48 @@
+---
+
+- name: Add kibana repo
+  ansible.builtin.include_tasks:
+    file: add-debian-rep.yml
+  when: ansible_os_family == 'Debian'
+
+- name: Install Kibana.
+  ansible.builtin.package:
+    name: "{{ kibana_package }}"
+    state: "{{ kibana_package_state }}"
+
+
+- name: Configure kibana.
+  ansible.builtin.template:
+    src: "{{ item | basename }}.j2"
+    dest: "{{ item }}"
+    owner: root
+    group: kibana
+    mode: "0660"
+  with_items:
+    - /etc/kibana/kibana.yml
+  notify: restart kibana
+
+- name: Add Kibana user
+  ansible.builtin.include_role:
+    name: dv_elasticsearch
+    tasks_from: add_elastic_users
+  vars:
+    es_username: "{{ kibana_es_user }}"
+    es_user_pass: "{{ kibana_es_password }}"
+    es_host: "{{ es_host_master }}"
+    es_user_roles:
+      - kibana_system
+
+- name: Start kibana.
+  ansible.builtin.systemd:
+    name: kibana
+    daemon_reload: true
+    state: "{{ kibana_service_state }}"
+    enabled: "{{ kibana_service_enabled }}"
+
+- name: Make sure kibana is running before proceeding.
+  ansible.builtin.wait_for:
+    host: "{{ kibana_network_host }}"
+    port: "{{ kibana_http_port }}"
+    delay: 3
+    timeout: 300

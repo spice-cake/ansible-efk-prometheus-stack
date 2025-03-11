@@ -1,0 +1,14 @@
+---
+- name: Add required dependencies.
+  ansible.builtin.package:
+    name:
+      - apt-transport-https
+      - python3-elasticsearch
+    state: present
+
+- name: Add Elasticsearch repository.
+  ansible.builtin.apt_repository:
+    repo: 'deb [trusted=yes] {{ debian_elastic_yandex_mirror }} stable main'
+    state: present
+    update_cache: true
+

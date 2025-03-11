@@ -1,0 +1,29 @@
+---
+repo_version: '8'
+debian_elastic_yandex_mirror: https://mirror.yandex.ru/mirrors/elastic/{{ repo_version }}/
+kibana_package: kibana
+kibana_package_state: present
+
+kibana_es_user: kibana_system
+kibana_es_password: ChangeMe!
+es_host: "localhost"
+kibana_service_state: started
+kibana_service_enabled: true
+
+kibana_network_host: localhost
+kibana_http_port: 9200
+
+kibana_heap_size_min: 1g
+kibana_heap_size_max: 2g
+
+kibana_extra_options: ''
+
+elastic_path_data: /var/lib/kibana
+elastic_path_logs: /var/log/kibana
+elastic_conf_dir: /etc/kibana
+
+kibana_host_ip: "{{ ansible_default_ipv4.address | default('localhost') }}"
+kibana_host_port: 5601
+
+es_host_master: "localhost"
+es_http_port: 9200

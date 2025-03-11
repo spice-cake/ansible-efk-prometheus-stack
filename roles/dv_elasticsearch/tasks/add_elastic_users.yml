@@ -1,0 +1,65 @@
+- name: Check elastic pass set
+  ansible.builtin.debug:
+    msg: "elastic  set in vars"
+  when: es_api_basic_auth_password | length > 0
+  register: check_result
+
+- name: Generate temporary passwords
+  become: true
+  ansible.builtin.command: /usr/share/elasticsearch/bin/elasticsearch-reset-password -u elastic -b
+  register: elastic_temp_password
+  changed_when: true
+  when: check_result is skipped
+
+- name: DEBUG
+  ansible.builtin.debug:
+    msg: "elastic_temp_password is {{ elastic_temp_password }}d"
+  when: check_result is skipped
+
+- name: Extract temporary password
+  ansible.builtin.set_fact:
+    elastic_temp_password: "{{ elastic_temp_password.stdout | regex_search('New value: (.*)', '\\1') | first }}"
+  when: check_result is skipped
+  register: extract_result
+
+- name: Extract es_api_basic_auth_password  password
+  ansible.builtin.set_fact:
+    elastic_temp_password: "{{ es_api_basic_auth_password }}"
+  when: extract_result is skipped
+
+- name: Show temporary password
+  ansible.builtin.debug:
+    msg: "Superuser password is {{ elastic_temp_password }} | Please save it"
+  when: check_result is skipped
+
+- name: New user
+  community.elastic.elastic_user:
+    auth_scheme: http
+    auth_method: http_auth
+    login_hosts: "localhost"
+    login_user: "{{ es_api_basic_auth_username }}"
+    login_password: "{{ elastic_temp_password }}"
+    name: "{{ es_username }}"
+    password: "{{ es_user_pass }}"
+    roles: "{{ es_user_roles }}"
+  when:
+    - es_username != "kibana"
+    - es_username != "elastic"
+    - es_username != "kibana_system"
+
+- name: Change password for built-in es users
+  ansible.builtin.uri:
+    url: 'http://{{ es_host }}:9200/_security/user/{{ es_username }}/_password'
+    method: POST
+    user: "{{ es_api_basic_auth_username }}"
+    password: "{{ elastic_temp_password }}"
+    body_format: json
+    headers:
+      Content-Type: "application/json"
+    body:
+      password: "{{ es_user_pass }}"
+    status_code: 200
+  when:
+    - es_username == "kibana" or
+      es_username == "elastic" or
+      es_username == "kibana_system"
